@@ -21,7 +21,7 @@ A boilerplate for starting a new project using [goa](https://goa.design/).
 - 2. Use copier to create a new project from this template:
 
 ```bash
-  copier copy gh:applinh/goa-boilerplate.git . --trust -x .git
+  copier copy gh:applinh/goa-boilerplate . --trust -x .git
 ```
 
 - 3. Answer the prompts to customize your project, and you're ready to go!
