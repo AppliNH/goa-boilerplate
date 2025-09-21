@@ -1,0 +1,26 @@
+name: Verify Changelog Updated
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  changelog:
+    name: Ensure CHANGELOG.md updated
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # so we can compare with base branch
+
+      - name: Check for CHANGELOG.md changes
+        run: |
+          if ! git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q '^CHANGELOG.md$'; then
+            echo "❌ CHANGELOG.md was not updated in this PR."
+            exit 1
+          else
+            echo "✅ CHANGELOG.md was updated."
+          fi

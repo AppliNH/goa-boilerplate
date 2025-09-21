@@ -1,0 +1,23 @@
+package errorsimulatorapi
+
+import (
+	"context"
+	"errors"
+
+	errorsimulator "{{ module_name }}/gen/error_simulator"
+	"{{ module_name }}/internal/infra/logger"
+)
+
+type errorSimulatorService struct {
+	logger logger.LoggerInterface
+}
+
+// ThrowError implements errorsimulator.Service.
+func (e errorSimulatorService) ThrowError(ctx context.Context) (err error) {
+	e.logger.Error(ctx, "ouch internal error")
+	return errors.New("an internal error occurred")
+}
+
+func NewErrorService(logger logger.LoggerInterface) errorsimulator.Service {
+	return errorSimulatorService{logger: logger}
+}

@@ -1,0 +1,57 @@
+package design
+
+import (
+	. "goa.design/goa/v3/dsl"
+)
+
+// API definition
+var _ = API("{{ api_name }}", func() {
+	Title("{{ api_description }} API")
+	Description("A simple API for {{ api_description }}")
+	Version("1.0")
+
+	Server("{{ api_name }}", func() {
+		Description("{{ api_description }} server")
+	})
+})
+
+var _ = Service("greeting", func() {
+	Description("The greeting service says hello")
+
+	HTTP(func() {
+		Path("/api/v1/greeting")
+	})
+
+	Method("sayHello", func() {
+		Description("Says hello")
+		Payload(func() {
+			// No payload
+		})
+		Result(HelloResponse)
+		HTTP(func() {
+			GET("/say-hello")
+
+			Response(StatusOK)
+		})
+	})
+
+})
+
+var _ = Service("errorSimulator", func() {
+	Description("The error service demonstrates error handling")
+
+	HTTP(func() {
+		Path("/api/v1/error-simulator")
+	})
+
+	Method("throwError", func() {
+		Description("Throws an error")
+		Payload(func() {
+			// No payload
+		})
+
+		HTTP(func() {
+			GET("/throw-internal") // Will throw error, interpreted as internal server error
+		})
+	})
+})
