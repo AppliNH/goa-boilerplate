@@ -15,13 +15,15 @@ go_version:
     help: What Go version do you want to use? (e.g., 1.25 or 1.24)
     default: "1.25"
 
+_exclude:
+    - .github/workflows/_*.yml
+    - CHANGELOG.md
+    - README.md
+    - .git
+
 _tasks:
   - make install-dev-tools
   - make generate-code-design
   - make download-deps
   - make tidy
 
-_exclude:
-    - .github/workflows/_*.yml
-    - CHANGELOG.md
-    - README.md
