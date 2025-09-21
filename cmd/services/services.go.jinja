@@ -1,0 +1,49 @@
+package services
+
+import (
+	"context"
+
+	"{{ module_name }}/cmd/config"
+	errorsimulator "{{ module_name }}/gen/error_simulator"
+	"{{ module_name }}/gen/greeting"
+	errorsimulatorapi "{{ module_name }}/internal/app/error_simulator"
+	greetingapi "{{ module_name }}/internal/app/greeting"
+	"{{ module_name }}/internal/infra/http"
+	"{{ module_name }}/internal/infra/logger"
+
+	sloghttp "github.com/samber/slog-http"
+
+	errorsimulatorsvr "{{ module_name }}/gen/http/error_simulator/server"
+	greetingsvr "{{ module_name }}/gen/http/greeting/server"
+
+	goahttp "goa.design/goa/v3/http"
+)
+
+// Add request ID in errors payload to match in logs - can later be used as TraceID
+var defaultFormat = func(ctx context.Context, err error) goahttp.Statuser {
+	se := goahttp.NewErrorResponse(ctx, err)
+	if se, ok := se.(*goahttp.ErrorResponse); ok {
+		se.ID = sloghttp.GetRequestIDFromContext(ctx)
+	}
+	return se
+}
+
+func MountGreetingService(ctx context.Context, mux goahttp.Muxer, cfg config.Config) {
+	slogger := defaultSLoggerSettings("greeting", cfg.LogLevel)
+	logger := logger.NewLogger(slogger)
+	greetingSvc := greetingapi.NewGreetingService(logger)
+	greetingEndpoints := greeting.NewEndpoints(greetingSvc)
+	handler := greetingsvr.New(greetingEndpoints, mux, goahttp.RequestDecoder, goahttp.ResponseEncoder, http.ErrorHandler(logger), defaultFormat)
+
+	greetingsvr.Mount(mux, handler)
+}
+
+func MountErrorSimulatorService(ctx context.Context, mux goahttp.Muxer, cfg config.Config) {
+	slogger := defaultSLoggerSettings("greeting", cfg.LogLevel)
+	logger := logger.NewLogger(slogger)
+	errorSimulatorSvc := errorsimulatorapi.NewErrorService(logger)
+	errorSimulatorEndpoints := errorsimulator.NewEndpoints(errorSimulatorSvc)
+	handler := errorsimulatorsvr.New(errorSimulatorEndpoints, mux, goahttp.RequestDecoder, goahttp.ResponseEncoder, http.ErrorHandler(logger), defaultFormat)
+
+	errorsimulatorsvr.Mount(mux, handler)
+}

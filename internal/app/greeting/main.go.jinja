@@ -1,0 +1,23 @@
+package greetingapi
+
+import (
+	"context"
+
+	"{{ module_name }}/gen/greeting"
+	"{{ module_name }}/internal/infra/logger"
+)
+
+type greetingService struct {
+	logger logger.LoggerInterface
+}
+
+// SayHello implements greeting.Service.
+func (g *greetingService) SayHello(ctx context.Context) (res *greeting.HelloResponse, err error) {
+	return &greeting.HelloResponse{
+		Message: "Hello, World!",
+	}, nil
+}
+
+func NewGreetingService(logger logger.LoggerInterface) greeting.Service {
+	return &greetingService{logger: logger}
+}
