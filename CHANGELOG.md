@@ -1,3 +1,10 @@
+## 0.2.1
+
+- Fix Makefile docker build command
+- Improve CI workflow
+  - Use go 1.24 for golangci-lint-action as it is not compatible with go 1.25
+  - Remove unnecessary `go mod download` for docker build
+
 ## 0.2.0
 
 - Add config validation, default values and automated registration of config keys.
