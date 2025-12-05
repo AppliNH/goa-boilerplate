@@ -1,3 +1,7 @@
+## 0.2.2
+
+- Fix golangci-lint configuration
+
 ## 0.2.1
 
 - Fix Makefile docker build command
