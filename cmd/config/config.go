@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -15,7 +16,7 @@ import (
 
 type Config struct {
 	HTTP     HTTPConfig `mapstructure:"http"`
-	LogLevel slog.Level `mapstructure:"log_level"`
+	LogLevel slog.Level `mapstructure:"log_level" default:"INFO"`
 }
 
 func ParseLogLevel(level string) (slog.Level, error) {
@@ -50,18 +51,17 @@ func Load(cfgFile string) (Config, error) {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".goa-boilerplate" (without extension).
+		// Search config in home directory
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".goa-boilerplate")
 	}
 
-	// Set default values
-	viper.SetDefault("log_level", "INFO")
-	viper.SetDefault("http.port", "3000")
+	// Automatically register all config keys from struct tags (including defaults)
+	registerConfigKeys()
 
-	viper.AutomaticEnv() // read in environment variables that match
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
@@ -75,5 +75,59 @@ func Load(cfgFile string) (Config, error) {
 		log.Fatalf("unable to decode config into struct: %v", err)
 	}
 
+	// Validate using struct tags
+	if err := validateConfig(&cfg); err != nil {
+		log.Fatalf("config validation failed: %v", err)
+	}
+
 	return cfg, nil
+}
+
+// registerConfigKeys uses reflection to automatically register all config keys
+// from the Config struct's mapstructure tags, so viper knows to read them from env
+func registerConfigKeys() {
+	var cfg Config
+	registerStructKeys(reflect.TypeOf(cfg), "")
+}
+
+func registerStructKeys(t reflect.Type, prefix string) {
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+
+		// Get the mapstructure tag
+		tag := field.Tag.Get("mapstructure")
+		if tag == "" || tag == "-" {
+			continue
+		}
+
+		// Build the full key path
+		key := tag
+		if prefix != "" {
+			key = prefix + "." + tag
+		}
+
+		// If it's a struct, recurse
+		if field.Type.Kind() == reflect.Struct {
+			registerStructKeys(field.Type, key)
+		} else {
+			// Get default value from tag, or use empty string
+			defaultVal := field.Tag.Get("default")
+			viper.SetDefault(key, defaultVal)
+		}
+	}
+}
+
+func validateConfig(cfg *Config) error {
+	validate := validator.New()
+
+	// Register custom tag name for better error messages
+	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := fld.Tag.Get("mapstructure")
+		if name == "" {
+			return fld.Name
+		}
+		return name
+	})
+
+	return validate.Struct(cfg)
 }
