@@ -25,3 +25,7 @@ A boilerplate for starting a new project using [goa](https://goa.design/).
 ```
 
 - 3. Answer the prompts to customize your project, and you're ready to go!
+
+## Integrate template updates
+
+Run `copier update -A -T --trust .` inside your project.

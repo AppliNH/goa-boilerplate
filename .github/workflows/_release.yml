@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'README.md'
+      - '**/README.md'
+      - '.github/workflows/_*.yml'
+
+
 
 permissions:
   contents: write
